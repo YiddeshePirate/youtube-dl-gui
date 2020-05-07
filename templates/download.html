@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask Template Example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen"> -->
+    <link type="text/css" rel="stylesheet" href="{{url_for('static',filename='stylesd.css') }}">
+  </head>
+  <body>
+
+    <form method="POST">
+        <ul style="margin-top: 60px;">
+        <li style="list-style: none; justify-content: left; margin-bottom: 10px;">
+            <input id=audio type="radio" class="resolution" name="res" value="audio">
+            <label for="audio" style="color:  #c0c0c0;">audio</label><br>
+        </li>
+        {% for i in resolutions %}
+        <li style="list-style: none; justify-content: left; margin-bottom: 10px;">
+            <input id={{i[0]}} type="radio" class="resolution" name="res" value="{{i[0]}}">
+            <label for="{{i[0]}}" style="color:  #c0c0c0;">{{" ".join(i[1:])+"mb"}}</label><br>
+        </li>
+        {% endfor %}
+            <input type="submit" id=download_button name="submit_button" value="Download">
+        </ul>
+    </form>
+    <ul id="yembed">
+        {% for n in my_list %}
+        <iframe width="1000" height="600" src="https://www.youtube.com/embed/{{n}}" allow="accelerometer; autoplay; encrypted-media; gyroscope;picture-in-picture" allowfullscreen class="ytt"></iframe>
+        {% endfor %}
+    </ul>
+
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <!-- <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script> -->
+  </body>
+</html>
+
+

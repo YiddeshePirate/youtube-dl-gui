@@ -1,0 +1,28 @@
+body {
+  display: flex;
+  /* align-items: center; */
+  justify-content: center;
+  margin: 0 auto;
+  min-width: 400px;
+  min-height: 100vh;
+  background: #252525;
+}
+
+#yembed{
+  padding-top: 60px;
+}
+
+
+.resolution {
+  padding-top: 60pxt;
+  /* height: 10px; */
+}
+
+
+#download_button{
+  background: none;
+  width: 150px;
+  height: 50px;
+  margin-top: 20px;
+  color: floralwhite;
+}
