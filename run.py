@@ -41,14 +41,17 @@ def downloading_page():
     job_id = request.args.get("job_id")
     format_to_download = request.args.get('res_code')
     dl_obj = job_id_hooks[job_id]
-    dl_obj.d_t(format_to_download)
+    try:
+        dl_obj.d_t(format_to_download)
+    except FileExistsError:
+        return redirect(url_for("file_already_downloaded"))
     return render_template("downloading.html", job_id=job_id)
 
 
 @app.route("/downloading/<job_id>", methods=['GET', 'POST'])
 def downloading_progress(job_id):
     def stream():
-        dct = -1
+        dct = 0
         while dct < 100:
             sleep(0.5)
             dct = job_id_hooks[job_id].status
@@ -56,6 +59,17 @@ def downloading_progress(job_id):
             yield "data:" + str(dct) + "\n\n"
     
     return Response(stream(), mimetype="text/event-stream")
+
+
+@app.route("/success/")
+def success_page():
+
+    return render_template("success.html")
+
+
+@app.route("/filealreadydownloaded")
+def file_already_downloaded():
+    return render_template("alreadydownloaded.html")
 
 
 
