@@ -1,17 +1,20 @@
 import os
 from youtube_dl import YoutubeDL
 import urllib.parse as urlparse
+import threading
+import time
 
 
 class To_download():
 
     def __init__(self, url):
         self.url = url
-        self.dlobj = YoutubeDL()
+        self.dlobj = YoutubeDL({'quiet': True})
         parsed = urlparse.urlparse(url)
         self.id = urlparse.parse_qs(parsed.query)['v']
         self.id = urlparse.parse_qs(parsed.query)['v']
         self.formats = None
+        self.status = -1
 
     @property
     def get_formats(self):
@@ -22,7 +25,9 @@ class To_download():
             resolution = [k['format'].split("(")[-1][:-1] for k in formats]
             resolution = [k if k != "tiny" else "audio" for k in resolution]
             ext = [k['ext'] for k in formats]
-            filesizes = [str(round(k['filesize']/1000000, 2)) for k in formats]
+            filesizes = [k['filesize'] if k['filesize']
+                         else 0 for k in formats]
+            filesizes = [str(round(k/1000000, 2)) for k in filesizes]
             self.formats = list(zip(format_codes, resolution, ext, filesizes))
 
         return self.formats
@@ -34,7 +39,7 @@ class To_download():
         audio_picker.sort(key=lambda x: float(
             x[-1]) if x[1] == "audio" else -1)
         return audio_picker[-1][0]
-    
+
     @property
     def video_formats(self):
         self.get_formats
@@ -44,23 +49,29 @@ class To_download():
         if d['status'] == 'finished':
             self.status = 100.0
         elif d['status'] == 'downloading':
-            self.status = float(d["_percent_str"].replace('%', '').strip())
+            new_status = float(d["_percent_str"].replace('%', '').strip())
+            self.status = max(new_status, self.status)
 
     def download(self, quality, audio_only=False):
         if quality == "audio":
             self.dlobj = YoutubeDL(
-                {'format': f'{self.best_audio}', 'progress_hooks': [self.my_hook]})
+                {'format': f'{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True})
             self.dlobj.download([self.url])
             return
 
         self.dlobj = YoutubeDL(
-            {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook]})
+            {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True})
         self.dlobj.download([self.url])
 
-def main():
-    tst1 = To_download("https://www.youtube.com/watch?v=qFEH0rOBhY4")
-    print(tst1.video_formats)
 
+def main():
+    tst1 = To_download("https://www.youtube.com/watch?v=D_EX9FUDv3o")
+    x = threading.Thread(target=tst1.download, args=("243",))
+    x.start()
+    for i in range(10):
+        time.sleep(3)
+        print(f'\n{tst1.status}\n')
+    x.join()
 
 
 if __name__ == "__main__":
