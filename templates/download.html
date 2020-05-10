@@ -23,6 +23,9 @@
         {% endfor %}
             <input type="submit" id=download_button name="submit_button" value="Download">
         </ul>
+        <li style="list-style-type: none; height: 0px; width: 0px; background: none;">
+          <input type="text" name="job_id" value="{{job_id}}" style="display: none;">
+        </li>
     </form>
     <ul id="yembed">
         {% for n in my_list %}

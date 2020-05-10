@@ -1,7 +1,15 @@
-from flask import Flask, render_template,request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
 import youtubetools
-app = Flask(__name__)
+from youtubetools import job_id_hooks
+from time import time, sleep
+import threading
 
+
+def get_job_id():
+    return str(int(time()*10))
+
+
+app = Flask(__name__)
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -18,24 +26,38 @@ def template_test():
 @app.route("/download", methods=['GET', 'POST'])
 def download_page():
     if request.method == 'POST' and request.form.get('res'):
-        return redirect(url_for("downloading_page", res_code=request.form.get('res'), url = request.args.get("url")))
-        print(request.form.get('res'))
+        print(request.form.get("job_id"), " The ID")
+        return redirect(url_for("downloading_page", res_code=request.form.get('res'), job_id=request.form.get("job_id")))
 
+    job_id = get_job_id()
     url = request.args.get("url")
-    vidobj = youtubetools.To_download(url)
-    formats = vidobj.video_formats
-    formats = [k for k in formats if k[1] != "audio"]
-    formats.sort(key= lambda x:int(x[1][:-1]) if x[1] != "audio" else 0)
-    print(f'{url} to download')
-    
-    return render_template('download.html', my_list=vidobj.id, resolutions=formats)
+    vidobj = youtubetools.To_download(url, job_id)
+
+    return render_template('download.html', my_list=vidobj.id, resolutions=vidobj.formats_l, job_id=job_id)
 
 
 @app.route("/downloading", methods=['GET', 'POST'])
 def downloading_page():
-    url = request.args.get("url")
+    job_id = request.args.get("job_id")
     format_to_download = request.args.get('res_code')
-    return render_template("downloading.html")
+    dl_obj = job_id_hooks[job_id]
+    dl_obj.d_t(format_to_download)
+    return render_template("downloading.html", job_id=job_id)
+
+
+@app.route("/downloading/<job_id>", methods=['GET', 'POST'])
+def downloading_progress(job_id):
+    def stream():
+        dct = -1
+        while dct < 100:
+            sleep(0.5)
+            dct = job_id_hooks[job_id].status
+            print(dct)
+            yield "data:" + str(dct) + "\n\n"
+    
+    return Response(stream(), mimetype="text/event-stream")
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

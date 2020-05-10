@@ -4,10 +4,13 @@ import urllib.parse as urlparse
 import threading
 import time
 
+job_id_hooks = {}
 
 class To_download():
 
-    def __init__(self, url):
+    def __init__(self, url, job_id):
+        global job_id_hooks
+        self.job_id = job_id
         self.url = url
         self.dlobj = YoutubeDL({'quiet': True})
         parsed = urlparse.urlparse(url)
@@ -15,6 +18,8 @@ class To_download():
         self.id = urlparse.parse_qs(parsed.query)['v']
         self.formats = None
         self.status = -1
+        job_id_hooks[self.job_id] = self
+        
 
     @property
     def get_formats(self):
@@ -45,6 +50,13 @@ class To_download():
         self.get_formats
         return [k for k in self.get_formats if k[1] != "audio"]
 
+    @property
+    def formats_l(self):
+        formats_l = self.video_formats
+        formats_l = [k for k in formats_l if k[1] != "audio"]
+        formats_l.sort(key=lambda x: int(x[1][:x[1].find("p")]) if x[1] != "audio" else 0)
+        return formats_l
+
     def my_hook(self, d):
         if d['status'] == 'finished':
             self.status = 100.0
@@ -62,6 +74,11 @@ class To_download():
         self.dlobj = YoutubeDL(
             {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True})
         self.dlobj.download([self.url])
+    
+
+    def d_t(self, quality, audio_only=False):
+        x = threading.Thread(target=self.download, args=(quality, audio_only))
+        x.start()
 
 
 def main():

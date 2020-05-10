@@ -1,13 +1,13 @@
 
+
 body {
   display: flex;
-  align-items: center;
-  justify-content: center;
   margin: 0 auto;
   min-width: 400px;
   min-height: 100vh;
   background: #252525;
 }
+
 
 .progress {
   background: rgba(255,255,255,0.1);
@@ -29,6 +29,3 @@ body {
   height: 30px;
   width: 40%;
 }
-
-
-

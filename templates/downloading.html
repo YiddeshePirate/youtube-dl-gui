@@ -7,8 +7,21 @@
 </head>
 <body>
     <div class="progress">
-    <div class="progress-value"></div>
+    <div class="progress-value" style="width: 0%;"></div>
     </div>
+    <p id="jobi" style="display: none;">downloading/{{job_id}}</p>
+    <script>
+        var job_id = document.getElementById("jobi").innerHTML
+        var source = new EventSource(job_id)
+        source.onmessage = function (event){
+            console.log(event.data)
+            $('.progress-value').css('width', event.data + '%');
+            if (event.data == 100) {
+                window.location.href = "/success";
+
+                };
+            }
+    </script> 
     <script type=text/javascript src="{{url_for('static', filename='jquery.js') }}"></script>
 </body>
 </html>
