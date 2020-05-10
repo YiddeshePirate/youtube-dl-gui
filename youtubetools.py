@@ -6,6 +6,15 @@ import time
 
 job_id_hooks = {}
 
+class BaseYoutubeException(Exception):
+    pass
+
+
+class FileExistsY(BaseYoutubeException):
+    pass
+
+
+
 class To_download():
 
     def __init__(self, url, job_id):
@@ -15,9 +24,8 @@ class To_download():
         self.dlobj = YoutubeDL({'quiet': True})
         parsed = urlparse.urlparse(url)
         self.id = urlparse.parse_qs(parsed.query)['v']
-        self.id = urlparse.parse_qs(parsed.query)['v']
         self.formats = None
-        self.status = -1
+        self.status = 0
         job_id_hooks[self.job_id] = self
         
 
@@ -64,7 +72,8 @@ class To_download():
             new_status = float(d["_percent_str"].replace('%', '').strip())
             self.status = max(new_status, self.status)
 
-    def download(self, quality, audio_only=False):
+    def download(self, quality):
+
         if quality == "audio":
             self.dlobj = YoutubeDL(
                 {'format': f'{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True})
@@ -72,12 +81,17 @@ class To_download():
             return
 
         self.dlobj = YoutubeDL(
-            {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True})
+            {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True, 'outtmpl': '/%(title)s-%(format_id)s-%(id)s.%(ext)s'})
+
         self.dlobj.download([self.url])
     
 
-    def d_t(self, quality, audio_only=False):
-        x = threading.Thread(target=self.download, args=(quality, audio_only))
+    def d_t(self, quality):
+        for i in os.listdir():
+            if quality in i:
+                if self.id[0] in i:
+                    open(i, "xt")
+        x = threading.Thread(target=self.download, args=(quality,))
         x.start()
 
 

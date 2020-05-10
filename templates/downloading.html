@@ -6,6 +6,7 @@
     <title>Downloading...</title>
 </head>
 <body>
+    <span><h3 class=myh3 style="color: #fff;align-self: start;">0%</h3></span>
     <div class="progress">
     <div class="progress-value" style="width: 0%;"></div>
     </div>
@@ -16,11 +17,12 @@
         source.onmessage = function (event){
             console.log(event.data)
             $('.progress-value').css('width', event.data + '%');
+            $('.myh3').html(event.data + '%');
             if (event.data == 100) {
                 window.location.href = "/success";
 
                 };
-            }
+            };
     </script> 
     <script type=text/javascript src="{{url_for('static', filename='jquery.js') }}"></script>
 </body>
