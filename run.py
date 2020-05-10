@@ -85,7 +85,7 @@ def downloading_done(job_id):
             sleep(0.5)
             lst = [job_id_hooks[job_id].id[0], job_id_hooks[job_id].quality, "+"]
             for i in os.listdir():
-                if all([k in i for k in lst]):
+                if all([k in i for k in lst]) or (job_id_hooks[job_id].quality == "audio" and job_id_hooks[job_id].status >= 100):
                     print("done downloading")
                     yield "data:1\n\n"
                     not_done = False
