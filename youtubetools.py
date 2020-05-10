@@ -1,23 +1,18 @@
 import os
-from youtube_dl import YoutubeDL
+from youtube_dl import YoutubeDL, utils
 import urllib.parse as urlparse
 import threading
 import time
+not_found_error = utils.DownloadError
 
 job_id_hooks = {}
 
-class BaseYoutubeException(Exception):
-    pass
-
-
-class FileExistsY(BaseYoutubeException):
-    pass
 
 
 
 class To_download():
 
-    def __init__(self, url, job_id):
+    def __init__(self, url, job_id=None):
         global job_id_hooks
         self.job_id = job_id
         self.url = url
@@ -27,6 +22,7 @@ class To_download():
         self.formats = None
         self.status = 0
         job_id_hooks[self.job_id] = self
+        self.formats = self.get_formats
         
 
     @property
@@ -71,8 +67,10 @@ class To_download():
         elif d['status'] == 'downloading':
             new_status = float(d["_percent_str"].replace('%', '').strip())
             self.status = max(new_status, self.status)
+#            print(d)
 
     def download(self, quality):
+        self.quality = quality
 
         if quality == "audio":
             self.dlobj = YoutubeDL(
@@ -96,14 +94,7 @@ class To_download():
 
 
 def main():
-    tst1 = To_download("https://www.youtube.com/watch?v=D_EX9FUDv3o")
-    x = threading.Thread(target=tst1.download, args=("243",))
-    x.start()
-    for i in range(10):
-        time.sleep(3)
-        print(f'\n{tst1.status}\n')
-    x.join()
-
+    pass
 
 if __name__ == "__main__":
     main()

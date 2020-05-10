@@ -1,15 +1,25 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, Response
+import sys
+import threading
+import os
+from time import sleep, time
+
+from flask import (Flask, Response, jsonify, redirect, render_template,
+                   request, url_for)
+
 import youtubetools
 from youtubetools import job_id_hooks
-from time import time, sleep
-import threading
+
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    static_folder = os.path.join(sys._MEIPASS, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    app = Flask(__name__)
 
 
 def get_job_id():
     return str(int(time()*10))
 
-
-app = Flask(__name__)
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -31,8 +41,15 @@ def download_page():
 
     job_id = get_job_id()
     url = request.args.get("url")
-    vidobj = youtubetools.To_download(url, job_id)
+    try:
+        vidobj = youtubetools.To_download(url, job_id)
+    except KeyError:
+        return render_template("error.html", error="Link looks fishy to me!!")
 
+    except youtubetools.not_found_error:
+        return render_template("error.html", error="Video  is  Unavailable!!!")
+
+    print("hello")
     return render_template('download.html', my_list=vidobj.id, resolutions=vidobj.formats_l, job_id=job_id)
 
 
@@ -41,6 +58,7 @@ def downloading_page():
     job_id = request.args.get("job_id")
     format_to_download = request.args.get('res_code')
     dl_obj = job_id_hooks[job_id]
+
     try:
         dl_obj.d_t(format_to_download)
     except FileExistsError:
@@ -55,15 +73,30 @@ def downloading_progress(job_id):
         while dct < 100:
             sleep(0.5)
             dct = job_id_hooks[job_id].status
-            print(dct)
             yield "data:" + str(dct) + "\n\n"
+    
+    return Response(stream(), mimetype="text/event-stream")
+
+@app.route("/done/<job_id>", methods=['GET', 'POST'])
+def downloading_done(job_id):
+    def stream():
+        not_done = True
+        while not_done:
+            sleep(0.5)
+            lst = [job_id_hooks[job_id].id[0], job_id_hooks[job_id].quality, "+"]
+            for i in os.listdir():
+                if all([k in i for k in lst]):
+                    print("done downloading")
+                    yield "data:1\n\n"
+                    not_done = False
+                else:
+                    yield "data:0\n\n"
     
     return Response(stream(), mimetype="text/event-stream")
 
 
 @app.route("/success/")
 def success_page():
-
     return render_template("success.html")
 
 
@@ -73,5 +106,8 @@ def file_already_downloaded():
 
 
 
+
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

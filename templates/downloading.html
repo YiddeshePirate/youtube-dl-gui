@@ -10,18 +10,22 @@
     <div class="progress">
     <div class="progress-value" style="width: 0%;"></div>
     </div>
-    <p id="jobi" style="display: none;">downloading/{{job_id}}</p>
+    <p id="jobi" style="display: none;">{{job_id}}</p>
     <script>
         var job_id = document.getElementById("jobi").innerHTML
-        var source = new EventSource(job_id)
+        var source = new EventSource('downloading/'+job_id)
         source.onmessage = function (event){
-            console.log(event.data)
             $('.progress-value').css('width', event.data + '%');
             $('.myh3').html(event.data + '%');
-            if (event.data == 100) {
-                window.location.href = "/success";
-
-                };
+            };
+    </script> 
+    <script>
+        var job_id = document.getElementById("jobi").innerHTML
+        var source = new EventSource('done/' + job_id)
+        source.onmessage = function (event){
+            if (event.data == '1'){
+                window.location.replace("/success")
+            }
             };
     </script> 
     <script type=text/javascript src="{{url_for('static', filename='jquery.js') }}"></script>
