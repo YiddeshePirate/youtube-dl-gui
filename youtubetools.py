@@ -8,8 +8,6 @@ not_found_error = utils.DownloadError
 job_id_hooks = {}
 
 
-
-
 class To_download():
 
     def __init__(self, url, job_id=None):
@@ -23,7 +21,6 @@ class To_download():
         self.status = 0
         job_id_hooks[self.job_id] = self
         self.formats = self.get_formats
-        
 
     @property
     def get_formats(self):
@@ -58,7 +55,8 @@ class To_download():
     def formats_l(self):
         formats_l = self.video_formats
         formats_l = [k for k in formats_l if k[1] != "audio"]
-        formats_l.sort(key=lambda x: int(x[1][:x[1].find("p")]) if x[1] != "audio" else 0)
+        formats_l.sort(key=lambda x: int(
+            x[1][:x[1].find("p")]) if x[1] != "audio" else 0)
         return formats_l
 
     def my_hook(self, d):
@@ -69,7 +67,7 @@ class To_download():
             self.status = max(new_status, self.status)
 #            print(d)
 
-    def download(self, quality):
+    def download(self, quality, mp4=False):
         self.quality = quality
 
         if quality == "audio":
@@ -78,23 +76,33 @@ class To_download():
             self.dlobj.download([self.url])
             return
 
-        self.dlobj = YoutubeDL(
-            {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [self.my_hook], 'quiet': True, 'outtmpl': '/%(title)s-%(format_id)s-%(id)s.%(ext)s'})
+        ydlopts = {'format': f'{quality}+{self.best_audio}', 'progress_hooks': [
+            self.my_hook], 'quiet': True, 'outtmpl': '/%(title)s-%(format_id)s-%(id)s.%(ext)s'}
 
+        pp ={'videoformat' : "mp4"}     
+
+        if mp4:
+            ydlopts.update(pp)
+
+        print(ydlopts)
+        self.dlobj = YoutubeDL(ydlopts)
         self.dlobj.download([self.url])
-    
 
-    def d_t(self, quality):
+    def d_t(self, quality, mp4=False):
         for i in os.listdir():
             if quality in i:
                 if self.id[0] in i:
                     open(i, "xt")
-        x = threading.Thread(target=self.download, args=(quality,))
+
+        x = threading.Thread(target=self.download, args=(quality,mp4))
         x.start()
 
 
 def main():
-    pass
+    vid1 = "https://www.youtube.com/watch?v=BQ0mxQXmLsk"
+    x = To_download(vid1)
+    x.d_t("243", mp4=True)
+
 
 if __name__ == "__main__":
     main()
